@@ -44,6 +44,7 @@ type model struct {
 	board  Board
 	cx     int
 	cy     int
+	points int
 }
 
 var _model model
@@ -72,6 +73,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case " ":
+			m.points += m.board.Hit(m.cx, m.cy)
 		case "up":
 			m.cy--
 		case "down":
@@ -102,7 +105,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return m.board.WithCursor(m.cx, m.cy)
+	return m.board.WithCursor(m.cx, m.cy) + fmt.Sprintf("Points: %d", m.points)
 }
 
 func initialModel(cfg Config) model {

@@ -12,6 +12,16 @@ type TileType struct {
 	Color string `yaml:"color"`
 }
 
+var EMPTY_TILE = TileType{
+	Sign:  " ",
+	Color: "#000000",
+}
+
+var TMP_TILE = TileType{
+	Sign:  "_",
+	Color: "#000000",
+}
+
 type Board struct {
 	Width  int
 	Height int
@@ -43,6 +53,39 @@ func (b Board) WithCursor(cx, cy int) string {
 		s += "\n"
 	}
 	return s
+}
+
+func (b Board) floodFill(t, ft TileType, cx, cy int) int {
+	if cx < 0 || cx >= b.Width || cy < 0 || cy >= b.Height || t == EMPTY_TILE {
+		return 0
+	}
+
+	// TODO NEM JO!
+	current := b.Tiles[cy][cx]
+	if current == t {
+		b.Tiles[cy][cx] = ft
+		return 1 + b.floodFill(t, ft, cx+1, cy) + b.floodFill(t, ft, cx-1, cy) + b.floodFill(t, ft, cx, cy+1) + b.floodFill(t, ft, cx, cy-1)
+	}
+
+	return 0
+}
+
+func (b Board) Hit(cx, cy int) int {
+	if cx < 0 || cx >= b.Width || cy < 0 || cy >= b.Height {
+		return 0
+	}
+
+	reftile := b.Tiles[cy][cx]
+	csize := b.floodFill(b.Tiles[cy][cx], TMP_TILE, cx, cy)
+
+	if csize > 2 {
+		csize := b.floodFill(TMP_TILE, EMPTY_TILE, cx, cy)
+		return csize
+	}
+
+	// too small, revert
+	b.floodFill(b.Tiles[cy][cx], reftile, cx, cy)
+	return 0
 }
 
 func generateBoard(config Config) Board {
