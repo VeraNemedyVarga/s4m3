@@ -17,6 +17,7 @@ type Config struct {
 	Seed      int64      `yaml:"seed"`
 	Width     int        `yaml:"width"`
 	Height    int        `yaml:"height"`
+	Addr      string     `yaml:"addr"`
 }
 
 var defaultConfig = Config{
@@ -40,11 +41,12 @@ var defaultConfig = Config{
 }
 
 type model struct {
-	config Config
-	board  Board
-	cx     int
-	cy     int
-	points int
+	config   Config
+	board    Board
+	gameOver bool
+	cx       int
+	cy       int
+	points   int
 }
 
 var _model model
@@ -115,6 +117,25 @@ func initialModel(cfg Config) model {
 	}
 }
 
+func saveConfig(path string, cfg Config) error {
+	ycfg, err := yaml.Marshal(cfg)
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	err2 := ioutil.WriteFile(path, ycfg, 0644)
+
+	if err2 != nil {
+		log.Println(err2)
+		return err2
+	}
+
+	log.Println("Configuration saved to", path)
+	return nil
+}
+
 func readConfig(path string) (Config, error) {
 	var cfg Config
 
@@ -125,7 +146,9 @@ func readConfig(path string) (Config, error) {
 	ycfg, err := ioutil.ReadFile(path)
 
 	if err != nil {
-		return defaultConfig, err
+		// error reading config file, use default config and try to save it
+		errS := saveConfig(path, defaultConfig)
+		return defaultConfig, errS
 	}
 
 	err2 := yaml.Unmarshal(ycfg, &cfg)
@@ -144,6 +167,10 @@ func main() {
 
 	if err != nil {
 		log.Println(err)
+	}
+
+	if cfg.Addr != "" {
+		go initApi(cfg)
 	}
 
 	p := tea.NewProgram(initialModel(cfg))

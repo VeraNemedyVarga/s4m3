@@ -26,6 +26,7 @@ type Board struct {
 	Width  int
 	Height int
 	Tiles  [][]TileType
+	Seed   int64
 }
 
 func (b Board) String() string {
@@ -129,5 +130,6 @@ func generateBoard(config Config) Board {
 		Width:  config.Width,
 		Height: config.Height,
 		Tiles:  tiles,
+		Seed:   seed,
 	}
 }

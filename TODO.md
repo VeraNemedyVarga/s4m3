@@ -1,5 +1,8 @@
-- end-check
-- api
-- more tiles from the top
+- [x] save default configuration if no config file
+- [ ] end-check
+- [ ] api
+- [ ] more tiles from the top
 - [?] mouse support
-- fancy shit
+- [ ] fancy shit
+
+- [ ] websocket - multiplayer (?!)
