@@ -60,7 +60,6 @@ func (b Board) floodFill(t, ft TileType, cx, cy int) int {
 		return 0
 	}
 
-	// TODO NEM JO!
 	current := b.Tiles[cy][cx]
 	if current == t {
 		b.Tiles[cy][cx] = ft
@@ -68,6 +67,22 @@ func (b Board) floodFill(t, ft TileType, cx, cy int) int {
 	}
 
 	return 0
+}
+
+func (b Board) shake() {
+	for col := 0; col < b.Width; col++ {
+		for row := b.Height - 1; row > 0; row-- {
+			if b.Tiles[row][col] == EMPTY_TILE {
+				for row2 := row - 1; row2 >= 0; row2-- {
+					if b.Tiles[row2][col] != EMPTY_TILE {
+						b.Tiles[row][col] = b.Tiles[row2][col]
+						b.Tiles[row2][col] = EMPTY_TILE
+						break
+					}
+				}
+			}
+		}
+	}
 }
 
 func (b Board) Hit(cx, cy int) int {
@@ -80,10 +95,11 @@ func (b Board) Hit(cx, cy int) int {
 
 	if csize > 2 {
 		csize := b.floodFill(TMP_TILE, EMPTY_TILE, cx, cy)
-		return csize
+		b.shake() // TODO new tiles from the top
+		return 1 + (csize-3)*2
 	}
 
-	// too small, revert
+	// cluster too small, revert fill
 	b.floodFill(b.Tiles[cy][cx], reftile, cx, cy)
 	return 0
 }

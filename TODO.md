@@ -1,0 +1,5 @@
+- end-check
+- api
+- more tiles from the top
+- [?] mouse support
+- fancy shit
