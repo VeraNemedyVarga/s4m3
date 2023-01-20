@@ -23,10 +23,10 @@ var TMP_TILE = TileType{
 }
 
 type Board struct {
-	Width  int
-	Height int
-	Tiles  [][]TileType
-	Seed   int64
+	Width  int          `json:"width"`
+	Height int          `json:"height"`
+	Tiles  [][]TileType `json:"tiles"`
+	Seed   int64        `json:"seed"`
 }
 
 func (b Board) String() string {

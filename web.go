@@ -9,27 +9,70 @@ import (
 type modelresponse struct {
 	Board    Board `json:"board"`
 	GameOver bool  `json:"gameOver"`
+	Points   int   `json:"points"`
+}
+
+type WebHit struct {
+	X    int `json:"x"`
+	Y    int `json:"y"`
+	resp chan model
+}
+
+func (w WebHit) getCoords() (int, int) {
+	return w.X, w.Y
+}
+
+func (w WebHit) getResp() chan model {
+	return w.resp
+}
+
+type WebGet struct {
+	resp chan model
+}
+
+func (w WebGet) getResp() chan model {
+	return w.resp
 }
 
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
-func handleBoard(w http.ResponseWriter, _ *http.Request) {
-	enableCors(&w)
-	m := getWebModel()
+func handleBoard(sub chan webHitMsg) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		enableCors(&w)
 
-	resp := modelresponse{
-		Board:    m.board,
-		GameOver: m.gameOver,
+		ch := make(chan model)
+
+		if r.Method == "POST" {
+			decoder := json.NewDecoder(r.Body)
+			var hit WebHit
+			err := decoder.Decode(&hit)
+			hit.resp = ch
+			if err != nil {
+				log.Println(err)
+			}
+			defer r.Body.Close()
+
+			sub <- hit
+		} else {
+			sub <- WebGet{resp: ch}
+		}
+
+		m := <-ch
+		resp := modelresponse{
+			Board:    m.board,
+			GameOver: m.gameOver,
+			Points:   m.points,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
 }
 
-func initApi(config Config) {
-	http.HandleFunc("/api/board", handleBoard)
+func initApi(config Config, sub chan webHitMsg) {
+	http.HandleFunc("/api/board", handleBoard(sub))
 	// http.Handle("/ws", wshandler())
 
 	fs := http.FileServer(http.Dir("./static"))

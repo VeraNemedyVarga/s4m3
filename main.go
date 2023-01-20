@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"sync"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"gopkg.in/yaml.v2"
@@ -47,26 +46,21 @@ type model struct {
 	cx       int
 	cy       int
 	points   int
+	sub      chan webHitMsg
 }
 
-var _model model
-var modelMu sync.RWMutex
-
-func setWebModel(m model) {
-	modelMu.Lock()
-	defer modelMu.Unlock()
-	_model = m
+type webHitMsg interface {
+	getResp() chan model
 }
 
-func getWebModel() model {
-	modelMu.RLock()
-	defer modelMu.RUnlock()
-	return _model
+func waitForWebHit(sub chan webHitMsg) tea.Cmd {
+	return func() tea.Msg {
+		return webHitMsg(<-sub)
+	}
 }
 
 func (m model) Init() tea.Cmd {
-	setWebModel(m)
-	return nil
+	return waitForWebHit(m.sub)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -86,8 +80,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "right":
 			m.cx++
 		}
-	case tea.MouseMsg:
-		fmt.Println(msg)
+	case webHitMsg:
+		switch msg.(type) {
+		case WebHit:
+			x, y := msg.(WebHit).getCoords()
+			m.points += m.board.Hit(x, y)
+			msg.getResp() <- m
+			return m, waitForWebHit(m.sub)
+		case WebGet:
+			msg.getResp() <- m
+			return m, waitForWebHit(m.sub)
+		}
 	}
 
 	if m.cx < 0 {
@@ -114,6 +117,7 @@ func initialModel(cfg Config) model {
 	return model{
 		config: cfg,
 		board:  generateBoard(cfg),
+		sub:    make(chan webHitMsg),
 	}
 }
 
@@ -169,11 +173,13 @@ func main() {
 		log.Println(err)
 	}
 
+	m := initialModel(cfg)
+
 	if cfg.Addr != "" {
-		go initApi(cfg)
+		go initApi(cfg, m.sub)
 	}
 
-	p := tea.NewProgram(initialModel(cfg))
+	p := tea.NewProgram(m)
 	if err := p.Start(); err != nil {
 		fmt.Printf("could not start game: %v", err)
 		os.Exit(1)
