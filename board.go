@@ -51,9 +51,17 @@ func (b Board) WithCursor(cx, cy int) string {
 			}
 			s += style.Render(tile.Sign)
 		}
-		s += "\n"
+		if y != len(b.Tiles)-1 {
+			s += "\n"
+		}
 	}
-	return s
+
+	style := lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#aadd88")).
+		Padding(1, 2)
+
+	return style.Render(s)
 }
 
 func (b Board) floodFill(t, ft TileType, cx, cy int) int {
@@ -92,7 +100,7 @@ func (b Board) Hit(cx, cy int) int {
 	}
 
 	reftile := b.Tiles[cy][cx]
-	csize := b.floodFill(b.Tiles[cy][cx], TMP_TILE, cx, cy)
+	csize := b.floodFill(reftile, TMP_TILE, cx, cy)
 
 	if csize > 2 {
 		csize := b.floodFill(TMP_TILE, EMPTY_TILE, cx, cy)
@@ -103,6 +111,22 @@ func (b Board) Hit(cx, cy int) int {
 	// cluster too small, revert fill
 	b.floodFill(b.Tiles[cy][cx], reftile, cx, cy)
 	return 0
+}
+
+func (b Board) HasMove() bool {
+	for cy, row := range b.Tiles {
+		for cx, tile := range row {
+			if tile != EMPTY_TILE {
+				reftile := b.Tiles[cy][cx]
+				csize := b.floodFill(reftile, TMP_TILE, cx, cy)
+				b.floodFill(TMP_TILE, reftile, cx, cy)
+				if csize > 2 {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func generateBoard(config Config) Board {

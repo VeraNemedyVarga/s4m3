@@ -69,8 +69,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "r":
+			return initialModel(m.config), nil
+		case "R":
+			m.config.Seed = 0
+			return initialModel(m.config), nil
 		case " ":
 			m.points += m.board.Hit(m.cx, m.cy)
+			m.gameOver = !m.board.HasMove()
 		case "up":
 			m.cy--
 		case "down":
@@ -81,10 +87,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.cx++
 		}
 	case webHitMsg:
-		switch msg.(type) {
+		switch msg := msg.(type) {
 		case WebHit:
-			x, y := msg.(WebHit).getCoords()
+			x, y := msg.getCoords()
 			m.points += m.board.Hit(x, y)
+			m.gameOver = !m.board.HasMove()
 			msg.getResp() <- m
 			return m, waitForWebHit(m.sub)
 		case WebGet:
@@ -110,7 +117,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return m.board.WithCursor(m.cx, m.cy) + fmt.Sprintf("Points: %d", m.points)
+	gameover := ""
+	if m.gameOver {
+		gameover = " [GAME OVER] - r/R to restart"
+	}
+
+	return m.board.WithCursor(m.cx, m.cy) +
+		fmt.Sprintf("\nPoints: %d %s", m.points, gameover)
 }
 
 func initialModel(cfg Config) model {
@@ -179,9 +192,9 @@ func main() {
 		go initApi(cfg, m.sub)
 	}
 
-	p := tea.NewProgram(m)
+	p := tea.NewProgram(m, tea.WithAltScreen())
 	if err := p.Start(); err != nil {
-		fmt.Printf("could not start game: %v", err)
+		log.Println("Could not start game: ", err)
 		os.Exit(1)
 	}
 
