@@ -1,7 +1,7 @@
 - [x] save default configuration if no config file
-- [ ] end-check
+- [x] end-check
 - [x] api
-- [ ] more tiles from the top
+- [x] more tiles from the top
 - [?] mouse support
 - [ ] fancy sh*t
 

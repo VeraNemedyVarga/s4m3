@@ -23,10 +23,13 @@ var TMP_TILE = TileType{
 }
 
 type Board struct {
-	Width  int          `json:"width"`
-	Height int          `json:"height"`
-	Tiles  [][]TileType `json:"tiles"`
-	Seed   int64        `json:"seed"`
+	Width      int          `json:"width"`
+	Height     int          `json:"height"`
+	Tiles      [][]TileType `json:"tiles"`
+	Seed       int64        `json:"seed"`
+	ExtraTiles int          `json:"extra_tiles"`
+	config     *Config
+	rand       *rand.Rand
 }
 
 func (b Board) String() string {
@@ -94,7 +97,18 @@ func (b Board) shake() {
 	}
 }
 
-func (b Board) Hit(cx, cy int) int {
+func (b *Board) fillBack() {
+	for row := b.Height - 1; row >= 0 && b.ExtraTiles > 0; row-- {
+		for col := 0; col < b.Width && b.ExtraTiles > 0; col++ {
+			if b.Tiles[row][col] == EMPTY_TILE {
+				b.Tiles[row][col] = randomTile(*b.config, *b.rand)
+				b.ExtraTiles--
+			}
+		}
+	}
+}
+
+func (b *Board) Hit(cx, cy int) int {
 	if cx < 0 || cx >= b.Width || cy < 0 || cy >= b.Height {
 		return 0
 	}
@@ -104,7 +118,8 @@ func (b Board) Hit(cx, cy int) int {
 
 	if csize > 2 {
 		csize := b.floodFill(TMP_TILE, EMPTY_TILE, cx, cy)
-		b.shake() // TODO new tiles from the top
+		b.shake()
+		b.fillBack()
 		return 1 + (csize-3)*2
 	}
 
@@ -129,6 +144,11 @@ func (b Board) HasMove() bool {
 	return false
 }
 
+func randomTile(c Config, r rand.Rand) TileType {
+	ntypes := len(c.TileTypes)
+	return c.TileTypes[r.Intn(ntypes)]
+}
+
 func generateBoard(config Config) Board {
 	var tiles = make([][]TileType, config.Height)
 
@@ -141,19 +161,21 @@ func generateBoard(config Config) Board {
 
 	s := rand.NewSource(seed)
 	r := rand.New(s)
-	ntypes := len(config.TileTypes)
 
 	for i := 0; i < config.Height; i++ {
 		tiles[i] = make([]TileType, config.Width)
 		for j := 0; j < config.Width; j++ {
-			tiles[i][j] = config.TileTypes[r.Intn(ntypes)]
+			tiles[i][j] = randomTile(config, *r)
 		}
 	}
 
 	return Board{
-		Width:  config.Width,
-		Height: config.Height,
-		Tiles:  tiles,
-		Seed:   seed,
+		Width:      config.Width,
+		Height:     config.Height,
+		Tiles:      tiles,
+		Seed:       seed,
+		ExtraTiles: config.ExtraTiles,
+		rand:       r,
+		config:     &config,
 	}
 }

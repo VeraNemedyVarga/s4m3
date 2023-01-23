@@ -12,11 +12,12 @@ import (
 )
 
 type Config struct {
-	TileTypes []TileType `yaml:"tile_types"`
-	Seed      int64      `yaml:"seed"`
-	Width     int        `yaml:"width"`
-	Height    int        `yaml:"height"`
-	Addr      string     `yaml:"addr"`
+	TileTypes  []TileType `yaml:"tile_types"`
+	Seed       int64      `yaml:"seed"`
+	Width      int        `yaml:"width"`
+	Height     int        `yaml:"height"`
+	ExtraTiles int        `yaml:"extra_tiles"`
+	Addr       string     `yaml:"addr"`
 }
 
 var defaultConfig = Config{
@@ -123,7 +124,7 @@ func (m model) View() string {
 	}
 
 	return m.board.WithCursor(m.cx, m.cy) +
-		fmt.Sprintf("\nPoints: %d %s", m.points, gameover)
+		fmt.Sprintf("\nPoints: %d %s\n", m.points, gameover)
 }
 
 func initialModel(cfg Config) model {
