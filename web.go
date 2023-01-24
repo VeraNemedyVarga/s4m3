@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
+
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 )
 
 type modelresponse struct {
@@ -71,9 +75,71 @@ func handleBoard(sub chan webHitMsg) http.HandlerFunc {
 	}
 }
 
+func wshandler(sub chan webHitMsg) http.Handler {
+	ch := make(chan model)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		enableCors(&w)
+		conn, _, _, err := ws.UpgradeHTTP(r, w)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		go func() {
+			defer conn.Close()
+
+			readChan := make(chan WebHit)
+			go func() {
+				for {
+					msg, err := wsutil.ReadClientText(conn)
+					if err != nil {
+						log.Println(err)
+						return
+					}
+					var hit WebHit
+					err = json.Unmarshal(msg, &hit)
+					readChan <- hit
+					if err != nil {
+						log.Println(err)
+						return
+					}
+				}
+			}()
+
+			sleepTime := 1000
+
+			for {
+				select {
+				case <-time.After(time.Duration(sleepTime) * time.Millisecond):
+					sub <- WebGet{resp: ch}
+				case hit := <-readChan:
+					hit.resp = ch
+					sub <- hit
+				}
+
+				m := <-ch
+
+				resp := modelresponse{
+					Board:    m.board,
+					GameOver: m.gameOver,
+					Points:   m.points,
+				}
+				jResp, _ := json.Marshal(resp)
+
+				err = wsutil.WriteServerMessage(conn, ws.OpText, jResp)
+				// quit on error
+				if err != nil {
+					return
+				}
+
+			}
+		}()
+	})
+}
+
 func initApi(config Config, sub chan webHitMsg) {
 	http.HandleFunc("/api/board", handleBoard(sub))
-	// http.Handle("/ws", wshandler())
+	http.Handle("/ws", wshandler(sub))
 
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
