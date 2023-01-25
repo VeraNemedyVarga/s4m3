@@ -1,0 +1,60 @@
+body {
+    display: flex;
+    justify-content: center;
+}
+
+#main {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+[visibility="visible"] {
+    visibility: visible;
+}
+[visibility="hidden"] {
+    visibility: hidden;
+}
+
+#gameover[visibility="visible"] {
+    position: absolute;
+    font-family: monospace;
+    font-size: 6rem;
+    z-index: 2;
+    color: gold;
+    transform: translateY(-1rem);
+    text-shadow: #fc0 1px 0 10px;
+}
+
+.heading {
+    color: darkblue;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 1rem 0;
+}
+    
+.buttons {
+    margin: 1rem 0;
+}
+
+button:hover,
+canvas:hover {
+    cursor: pointer;
+}
+
+.buttons {
+    display: flex;
+    width: 40%;
+    justify-content: space-between;
+}
+
+button {
+    border: 1px solid #bcbcbc;
+    padding: 8px 10px;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #a4a4a4;
+}

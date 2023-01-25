@@ -5,23 +5,123 @@
   <title>WS test</title>
 </head>
 <body>
-  <pre id="content"></pre>
-
+  <!-- <pre id="content"></pre> -->
+  <main id="main">
+    <p id="gameover">Game Over</p>
+    <div class="heading">
+        <span>Points: </span>
+        <span id="points"></span>
+    </div>
+    <canvas id="canvas" width="1000" height="1000"></canvas>
+    <div class="buttons">
+      <button id="restart">Restart Board</button>
+      <button id="newgame">New Game</button>
+    </div>
+  </main>
 <script>
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const width = 20;
+  const height = 20;
+  const tilewidth = 30;
+
+  const points = document.getElementById("points");
+  const gameOver = document.getElementById("gameover");
+
+  const restart = document.getElementById("restart");
+  const newgame = document.getElementById("newgame");
+
+  const autoPlayOn = true;
+
+  restart.addEventListener("click", e => {
+    hit(0, 0, true);
+  })
+
+  newgame.addEventListener("click", e => {
+    hit(0, 0, false, true);
+  })
+
   var ws = new WebSocket(`ws://${window.location.host}/ws`);
   ws.onopen = function() {
     console.log("open");
   };
   ws.onmessage = function(e) {
-    document.getElementById("content").innerHTML = e.data;
+    let data = JSON.parse(e.data);
+    setUpCanvas(data.board);
+    points.textContent = data.points;
+    if(data.gameOver) {
+      gameOver.setAttribute("visibility", "visible");
+    } else {
+      gameOver.setAttribute("visibility", "hidden");
+    }
   };
   ws.onclose = function() {
     console.log("close");
   };
-
-  var hit = (x, y) => {
-    ws.send(JSON.stringify({x, y}));
+  
+  var hit = (x, y, restart = false, newGame = false) => {
+    ws.send(JSON.stringify({x, y, restart, new: newGame}));
   };
+  
+  setUpCanvas = function(board) {
+    ctx.canvas.width = tilewidth * width;
+    ctx.canvas.height = tilewidth * height;
+    ctx.strokeStyle = "lightgrey";
+    for(let i = 0; i < width; i++) {
+      for(let j = 0; j < height; j++) {
+        ctx.strokeRect((i * tilewidth), (j * tilewidth), tilewidth, tilewidth);
+        ctx.fillStyle = board.tiles[j][i].Color;
+        ctx.fillRect((i * tilewidth), (j * tilewidth), tilewidth, tilewidth);
+      }
+    }
+
+    if(autoPlayOn) {
+      // console.log(canvas.getBoundingClientRect());
+     let x = Math.floor(Math.random() * 20);
+     let y = Math.floor(Math.random() * 20);
+     if(board.tiles[x][y].Sign !== " ") {
+        console.log("x, y", x, y);
+        hit(x, y);
+      }
+    }
+  }
+  
+  handleClick = function(e) {
+    console.log(e)
+    const canvasOffsetX = this.offsetLeft - this.scrollLeft;
+    const canvasOffsetY = this.offsetTop - this.scrollTop;
+    
+    const x = event.pageX - canvasOffsetX;
+    const y = event.pageY - canvasOffsetY;
+    console.log("canvasOffsetX", canvasOffsetX, "canvasOffsetY", canvasOffsetY);
+
+    let nearestRectX = Math.floor(x / tilewidth);
+    let nearestRectY = Math.floor(y / tilewidth);
+    console.log("hit target", nearestRectX, nearestRectY, this);
+    hit(nearestRectX, nearestRectY);
+  }
+  canvas.addEventListener("click", handleClick);
+
+  autoPlay = function(board) {
+    for(let i = width; i > 0; i--) {
+      for(let j = height; j > 0 ; j--) {
+        board.tiles[j][i]
+      }
+    }
+  }
+
+  getNeighbor = function(board, x, y, color) {
+    let neighbors = [board.tiles[x][y-1], board.tiles[x][y+1], board.tiles[x+1][y], board.tiles[x-1][y]];
+    neighbors.filter(nb => {
+      // if(width < nb[i] || nb[i] < 0 || width < nb[j] || nb[j] < 0)
+    })
+  }
+
+  getSmallesCluster = function() {
+
+  }
+
 </script>
 </body>
+<link rel="stylesheet" href="style.css" type="text/css">
 </html>
