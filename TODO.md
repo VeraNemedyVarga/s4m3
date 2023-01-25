@@ -2,7 +2,7 @@
 - [x] end-check
 - [x] api
 - [x] more tiles from the top
-- [?] mouse support
+- [x] mouse support
 - [ ] fancy sh*t
 
 - [ ] websocket - multiplayer (?!)

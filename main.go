@@ -87,6 +87,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "right":
 			m.cx++
 		}
+	case tea.MouseMsg:
+		if msg.Type == tea.MouseLeft {
+			m.cx = msg.X - 1 - PADDING_H
+			m.cy = msg.Y - 1 - PADDING_V
+			m.points += m.board.Hit(m.cx, m.cy)
+			m.gameOver = !m.board.HasMove()
+		}
 	case webHitMsg:
 		switch msg := msg.(type) {
 		case WebHit:
@@ -193,7 +200,7 @@ func main() {
 		go initApi(cfg, m.sub)
 	}
 
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion())
 	if err := p.Start(); err != nil {
 		log.Println("Could not start game: ", err)
 		os.Exit(1)

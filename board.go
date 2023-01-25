@@ -17,6 +17,11 @@ var EMPTY_TILE = TileType{
 	Color: "#000000",
 }
 
+const (
+	PADDING_V = 1
+	PADDING_H = 2
+)
+
 var TMP_TILE = TileType{
 	Sign:  "_",
 	Color: "#000000",
@@ -62,7 +67,7 @@ func (b Board) WithCursor(cx, cy int) string {
 	style := lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("#aadd88")).
-		Padding(1, 2)
+		Padding(PADDING_V, PADDING_H)
 
 	return style.Render(s)
 }
