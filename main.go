@@ -221,9 +221,10 @@ func main() {
 
 	m := initialModel(cfg)
 
-	if cfg.Addr != "" {
-		go initApi(cfg, m.sub)
+	if cfg.Addr == "" {
+		cfg.Addr = ":2345"
 	}
+	go initApi(cfg, m.sub)
 
 	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion())
 	if err := p.Start(); err != nil {

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
+	"io/fs"
 	"log"
 	"net/http"
 	"time"
@@ -9,6 +11,9 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 )
+
+//go:embed static
+var static embed.FS
 
 type modelresponse struct {
 	Board    Board `json:"board"`
@@ -143,7 +148,9 @@ func initApi(config Config, sub chan webHitMsg) {
 	http.HandleFunc("/api/board", handleBoard(sub))
 	http.Handle("/ws", wshandler(sub))
 
-	fs := http.FileServer(http.Dir("./static"))
+	fsys := fs.FS(static)
+	html, _ := fs.Sub(fsys, "static")
+	fs := http.FileServer(http.FS(html))
 	http.Handle("/", fs)
 
 	log.Printf("Listening on %s", config.Addr)
