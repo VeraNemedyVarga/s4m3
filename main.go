@@ -65,6 +65,20 @@ func (m model) Init() tea.Cmd {
 	return waitForWebHit(m.sub)
 }
 
+func (m *model) restart() {
+	m.config.Seed = m.board.Seed
+	m.board = generateBoard(m.config)
+	m.points = 0
+	m.gameOver = false
+}
+
+func (m *model) newGame() {
+	m.config.Seed = 0
+	m.board = generateBoard(m.config)
+	m.points = 0
+	m.gameOver = false
+}
+
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -72,11 +86,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "r":
-			m.board = generateBoard(m.config)
+			m.restart()
 			return m, nil
 		case "R":
-			m.config.Seed = 0
-			m.board = generateBoard(m.config)
+			m.newGame()
 			return m, nil
 		case " ":
 			m.points += m.board.Hit(m.cx, m.cy)
@@ -101,12 +114,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg := msg.(type) {
 		case WebHit:
 			if msg.Restart {
-				m.board = generateBoard(m.config)
+				m.restart()
 				msg.getResp() <- m
 				return m, waitForWebHit(m.sub)
 			} else if msg.NewGame {
-				m.config.Seed = 0
-				m.board = generateBoard(m.config)
+				m.newGame()
 				msg.getResp() <- m
 				return m, waitForWebHit(m.sub)
 			}
