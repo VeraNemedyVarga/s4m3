@@ -17,9 +17,11 @@ type modelresponse struct {
 }
 
 type WebHit struct {
-	X    int `json:"x"`
-	Y    int `json:"y"`
-	resp chan model
+	X       int  `json:"x"`
+	Y       int  `json:"y"`
+	Restart bool `json:"restart"`
+	NewGame bool `json:"new"`
+	resp    chan model
 }
 
 func (w WebHit) getCoords() (int, int) {

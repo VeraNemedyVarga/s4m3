@@ -71,10 +71,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		case "r":
-			return initialModel(m.config), nil
+			m.board = generateBoard(m.config)
+			return m, nil
 		case "R":
 			m.config.Seed = 0
-			return initialModel(m.config), nil
+			m.board = generateBoard(m.config)
+			return m, nil
 		case " ":
 			m.points += m.board.Hit(m.cx, m.cy)
 			m.gameOver = !m.board.HasMove()
@@ -97,6 +99,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case webHitMsg:
 		switch msg := msg.(type) {
 		case WebHit:
+			if msg.Restart {
+				m.board = generateBoard(m.config)
+				msg.getResp() <- m
+				return m, waitForWebHit(m.sub)
+			} else if msg.NewGame {
+				m.config.Seed = 0
+				m.board = generateBoard(m.config)
+				msg.getResp() <- m
+				return m, waitForWebHit(m.sub)
+			}
 			x, y := msg.getCoords()
 			m.points += m.board.Hit(x, y)
 			m.gameOver = !m.board.HasMove()

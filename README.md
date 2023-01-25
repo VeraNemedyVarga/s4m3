@@ -30,5 +30,5 @@ Post the coordinates to clear (as JSON):
 ```
 POST /api/board
 
-{x: 1, y: 2}
+{x: 1, y: 2, restart: false, new: false}
 ```
