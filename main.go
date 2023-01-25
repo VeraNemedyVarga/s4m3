@@ -12,12 +12,13 @@ import (
 )
 
 type Config struct {
-	TileTypes  []TileType `yaml:"tile_types"`
-	Seed       int64      `yaml:"seed"`
-	Width      int        `yaml:"width"`
-	Height     int        `yaml:"height"`
-	ExtraTiles int        `yaml:"extra_tiles"`
-	Addr       string     `yaml:"addr"`
+	TileTypes   []TileType `yaml:"tile_types"`
+	Seed        int64      `yaml:"seed"`
+	Width       int        `yaml:"width"`
+	Height      int        `yaml:"height"`
+	ExtraTiles  int        `yaml:"extra_tiles"`
+	ColorInvert bool       `yaml:"color_invert"`
+	Addr        string     `yaml:"addr"`
 }
 
 var defaultConfig = Config{

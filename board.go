@@ -53,7 +53,12 @@ func (b Board) WithCursor(cx, cy int) string {
 	var s string
 	for y, row := range b.Tiles {
 		for x, tile := range row {
-			style := lipgloss.NewStyle().Foreground(lipgloss.Color(tile.Color))
+			style := lipgloss.NewStyle()
+			if b.config.ColorInvert {
+				style = style.Background(lipgloss.Color(tile.Color)).Foreground(lipgloss.Color("#000000"))
+			} else {
+				style = style.Foreground(lipgloss.Color(tile.Color))
+			}
 			if x == cx && y == cy {
 				style = style.Background(lipgloss.Color("#668800"))
 			}
