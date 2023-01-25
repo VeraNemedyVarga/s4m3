@@ -17,6 +17,8 @@ Keys:
 
 You can configure the game to listen on a port (specified in `config.yaml`, which is created at first run if does not exist), and use a web API to play the game.
 
+Default API / WebSocket port is `2345`.
+
 ### Get the board
 
 Issue a simple HTTP GET:
