@@ -13,8 +13,13 @@ body {
 [visibility="visible"] {
     visibility: visible;
 }
+
 [visibility="hidden"] {
     visibility: hidden;
+}
+
+#gameover[visibility="hidden"] {
+    position: absolute;
 }
 
 #gameover[visibility="visible"] {

@@ -31,7 +31,7 @@
   const restart = document.getElementById("restart");
   const newgame = document.getElementById("newgame");
 
-  const autoPlayOn = true;
+  const autoPlayOn = false;
 
   restart.addEventListener("click", e => {
     hit(0, 0, true);
@@ -77,13 +77,14 @@
 
     if(autoPlayOn) {
       // console.log(canvas.getBoundingClientRect());
-     let x = Math.floor(Math.random() * 20);
-     let y = Math.floor(Math.random() * 20);
-     if(board.tiles[x][y].Sign !== " ") {
+      let x = Math.floor(Math.random() * 20);
+      let y = Math.floor(Math.random() * 20);
+      if(board.tiles[x][y].Sign !== " ") {
         console.log("x, y", x, y);
         hit(x, y);
       }
     }
+    goThroughBaseRow(board)
   }
   
   handleClick = function(e) {
@@ -94,14 +95,14 @@
     const x = event.pageX - canvasOffsetX;
     const y = event.pageY - canvasOffsetY;
     console.log("canvasOffsetX", canvasOffsetX, "canvasOffsetY", canvasOffsetY);
-
+    
     let nearestRectX = Math.floor(x / tilewidth);
     let nearestRectY = Math.floor(y / tilewidth);
     console.log("hit target", nearestRectX, nearestRectY, this);
     hit(nearestRectX, nearestRectY);
   }
   canvas.addEventListener("click", handleClick);
-
+  
   autoPlay = function(board) {
     for(let i = width; i > 0; i--) {
       for(let j = height; j > 0 ; j--) {
@@ -109,16 +110,51 @@
       }
     }
   }
-
-  getNeighbor = function(board, x, y, color) {
-    let neighbors = [board.tiles[x][y-1], board.tiles[x][y+1], board.tiles[x+1][y], board.tiles[x-1][y]];
-    neighbors.filter(nb => {
-      // if(width < nb[i] || nb[i] < 0 || width < nb[j] || nb[j] < 0)
-    })
+  
+  goThroughBaseRow = function(board) {
+    let scores = []
+    for(let i = 1; i < board.width - 1; i++) {
+      let currentTile ={
+        x: i,
+        y: height-1
+      };
+      let score = getNeighbor(board, height-1, i);
+      scores.push({
+        score,
+        currentTile
+      });
+    }
+    scores.sort((a, b) => b.score - a.score);
+    console.log(scores[0].currentTile.x, scores[0].currentTile.y, "score is ", scores[0].score)
+    hit(scores[0].currentTile.x, scores[0].currentTile.y);
   }
 
-  getSmallesCluster = function() {
+  getNeighbor = function(board, y, x) {
+    let neighbors
+    if (x >= 1 && x <= 18) {
+      neighbors = [board.tiles[y-1][x], board.tiles[y-1][x-1], board.tiles[y][x-1], board.tiles[y][x+1], board.tiles[y-1][x+1]];
+    } else if (x <= 1) {
+      neighbors = [board.tiles[y][x-1], board.tiles[y][x+1], board.tiles[y-1][x+1]];
+    } else {
+      neighbors = [board.tiles[y-1][x], board.tiles[y][x-1],  board.tiles[y-1][x-1]];
+    }
+    let score = addScore(neighbors, board.tiles[y][x]);
+    if(score < 2) {
+      score = 0
+    }
+    return score;
+  }
 
+  addScore = function(neighbors, current) {
+    console.log("current ", current);
+    let scores = neighbors.filter(tile => {
+      console.log("tile ", tile);
+      if(tile.Sign == current.Sign && tile.Sign !== " ") {
+        return tile;
+      }
+    });
+    console.log(scores);
+    return scores.length;
   }
 
 </script>
